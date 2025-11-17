@@ -93,6 +93,31 @@ cp -a /usr/lib64/lib{mount,dbus-1,pcre2-8,kmod,xxhash}.so.* "$NEWROOT"/lib64/ # 
 emerge --quiet --noreplace dev-libs/libusb # Needed by usbutils
 COLLISION_IGNORE="/usr/bin /bin" install_package sys-apps/usbutils "" "--nodeps" # Avoid util-linux
 
+COLLISION_IGNORE="/bin /usr/bin" install_package net-dialup/lrzsz
+install_package net-libs/libpcap ipv6
+install_package net-misc/iperf
+install_package sys-apps/ethtool
+
+install_package sys-block/fio "numa zlib" "--nodeps"
+emerge --quiet --noreplace dev-build/cmake # Needed by nvme-cli, but missing dependency
+install_package sys-apps/nvme-cli
+
+install_package media-sound/sox "alsa ao"
+
+install_package sys-apps/kexec-tools "zlib" "--nodeps"
+
+COLLISION_IGNORE="/bin /sbin /usr/bin /usr/sbin" install_package dev-libs/glib "" "--nodeps" # Needed for bluez, avoid util-linux
+COLLISION_IGNORE="/bin /sbin /usr/bin /usr/sbin" emerge --quiet --noreplace dev-python/docutils sys-apps/dbus # Needed for bluez
+install_package net-wireless/bluez deprecated "--nodeps" # Avoid pulling dbus
+
+echo "app-benchmarks/stress-ng **" >> /etc/portage/package.accept_keywords/full
+install_package app-benchmarks/stress-ng "zlib"
+
+cp -a /usr/lib64/lib{mount,dbus-1,pcre2-8,kmod,xxhash}.so.* "$NEWROOT"/lib64/ # Copy additional libs for perf, stress-ng, libusb
+
+emerge --quiet --noreplace dev-libs/libusb # Needed by usbutils
+COLLISION_IGNORE="/usr/bin /bin" install_package sys-apps/usbutils "" "--nodeps" # Avoid util-linux
+
 install_package lzo # btrfs-progs dependency
 install_package btrfs-progs "convert zstd" "--nodeps" # Avoid pulling in util-linux
 
