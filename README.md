@@ -19,6 +19,27 @@ The following profiles are available, each of them packaged individually:
 * full      - basic release of NVIDIA TinyLinux
 * pxeserver - only suitable for hosting a PXE server
 
+Docker Build
+============
+
+Latest upstream Gentoo
+```sh
+docker create -v /var/db/repos/gentoo --name portage-latest gentoo/portage:latest /bin/true
+docker run --privileged --rm -it \
+    --volumes-from portage-latest \
+    -v .:/workdir \
+    -w /workdir \
+    gentoo/stage3:latest
+```
+From arbitrary commit
+```sh
+docker build . --build-arg GENTOO_COMMIT=ceedeec -t portage:local
+docker run --privileged --rm -it \
+    -v .:/workdir \
+    -w /workdir \
+    portage:local
+```
+
 
 Installation
 ============
