@@ -234,15 +234,22 @@ unpack_packages()
     # Don't do anything if the host tree already exists
     [[ -d $BUILDROOT ]] && return 0
 
+    # Use existing build host portage
+    if [[ -d $PORTAGE ]]; then
+        boldecho "Copying host ${PORTAGE} tree"
+        mkdir -p "${BUILDROOT}${PORTAGE}"
+	cp -a ${PORTAGE}/. "${BUILDROOT}${PORTAGE}"
+    else
+        # Unpack portage tree
+        boldecho "Unpacking portage tree"
+        mkdir -p "${BUILDROOT}"
+        tar_bz2 -xpf "$PORTAGEPKG" -C "$BUILDROOT/var/db/repos"
+        mv "$BUILDROOT/var/db/repos/portage" "${BUILDROOT}$PORTAGE"
+    fi
+
     # Unpack the root
     boldecho "Unpacking stage3 package"
-    mkdir "$BUILDROOT"
     tar_bz2 -xpf "$STAGE3PKG" --xattrs-include='*.*' --numeric-owner -C "$BUILDROOT"
-
-    # Unpack portage tree
-    boldecho "Unpacking portage tree"
-    tar_bz2 -xpf "$PORTAGEPKG" -C "$BUILDROOT/var/db/repos"
-    mv "$BUILDROOT/var/db/repos/portage" "${BUILDROOT}$PORTAGE"
 
     # Prepare portage configuration
     mkdir -p "$BUILDROOT/etc/portage/repos.conf"
@@ -449,6 +456,7 @@ prepare_portage()
         "sys-fs/squashfs-tools lzma"
         "sys-libs/glibc crypt rpc"
         "sys-libs/pam nis"
+        "dev-cpp/eigen openmp"
     )
 
     touch /etc/portage/package.use/tinylinux
@@ -595,6 +603,7 @@ emerge_basic_packages()
         sys-devel/bc
         $SYSLINUX_PKG
         zip
+        sys-libs/binutils-libs
     )
     if ! emerge --quiet --noreplace ${HOST_PKGS[@]}; then
         boldecho "Failed to emerge some packages"
@@ -1054,7 +1063,7 @@ create_busybox_symlinks()
     echo
     echo "*** Installing busybox symlinks"
     local SYMLINK
-    for SYMLINK in "${NEWROOT}-busybox"/{bin,sbin}/*; do
+    for SYMLINK in "${NEWROOT}"/{bin,sbin}/*; do
         test -h "$SYMLINK" || continue
         local TARGET="$(readlink "$SYMLINK")"
         [[ $TARGET =~ busybox$ ]] || continue
